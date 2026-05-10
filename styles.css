@@ -7,6 +7,7 @@
 html, body, #root {
   background-color: #0C0C0C;
   font-family: 'Kanit', sans-serif;
+  color-scheme: dark;
 }
 
 html {
@@ -85,6 +86,10 @@ body {
     font-size: clamp(0.82rem, 3.6vw, 0.97rem) !important;
     line-height: 1.5 !important;
     max-width: 270px !important;
+  }
+
+  .project-main-wrap > div {
+    aspect-ratio: 9 / 16 !important;
   }
 }
 
