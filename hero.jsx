@@ -54,7 +54,9 @@ function HeroSection() {
   }, [getBoundedPortraitPosition, isInside, portraitX, portraitY]);
 
   const updateMobileScrollPortrait = useCallback(() => {
-    if (!window.matchMedia('(max-width: 1279px)').matches) return;
+    const isNonDesktop = window.matchMedia('(max-width: 1279px)').matches ||
+      window.matchMedia('(orientation: landscape) and (max-width: 1300px) and (max-height: 900px)').matches;
+    if (!isNonDesktop) return;
     const section = sectionRef.current;
     const z = followZoneRef.current;
     if (!section || !z) return;

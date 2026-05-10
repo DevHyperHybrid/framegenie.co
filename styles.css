@@ -56,6 +56,13 @@ body {
   to   { transform: translate3d(0, 0, 0); }
 }
 
+@keyframes heroPortraitFloat {
+  0%   { transform: translateY(0px) rotate(-1deg); }
+  30%  { transform: translateY(-22px) rotate(0.5deg); }
+  60%  { transform: translateY(-10px) rotate(-0.5deg); }
+  100% { transform: translateY(0px) rotate(-1deg); }
+}
+
 @media (max-width: 767px) {
   .hero-title-stage {
     top: 27%;
@@ -67,13 +74,6 @@ body {
 
   .hero-title-track {
     animation-duration: 10s !important;
-  }
-
-  @keyframes heroPortraitFloat {
-    0%   { transform: translateY(0px) rotate(-1deg); }
-    30%  { transform: translateY(-22px) rotate(0.5deg); }
-    60%  { transform: translateY(-10px) rotate(-0.5deg); }
-    100% { transform: translateY(0px) rotate(-1deg); }
   }
 
   .hero-portrait-img {
@@ -338,8 +338,8 @@ body {
   }
 }
 
-/* Landscape: every screen where width > height, width up to 1300px */
-@media (orientation: landscape) and (max-width: 1300px) {
+/* Landscape: every screen where width > height, width up to 1300px, height up to 900px (excludes square desktop windows) */
+@media (orientation: landscape) and (max-width: 1300px) and (max-height: 900px) {
 
   /* ── Hero ── */
   .hero-title-stage {
@@ -406,6 +406,12 @@ body {
   /* ── Marquee ── */
   .marquee-row-1 { gap: 1rem !important; }
   .marquee-row-2 { gap: 2rem !important; }
+
+  /* ── Portrait animation ── */
+  .hero-portrait-img {
+    animation: heroPortraitFloat 4.5s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
 
   /* ── About ── */
   .about-decoration { display: none !important; }

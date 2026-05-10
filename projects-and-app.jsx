@@ -131,8 +131,16 @@ function ProjectVideo({ num, radius }) {
   const source = VIDEO_SOURCES[String(parseInt(num))];
   const [playing, setPlaying] = useState(false);
   const [buffering, setBuffering] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1279px)').matches);
   const videoRef = useRef(null);
   const wrapRef = useRef(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1279px)');
+    const update = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // Force buffering to start immediately on all devices.
   // Mobile browsers ignore preload="auto", but they DO buffer a muted video.
@@ -220,10 +228,10 @@ function ProjectVideo({ num, radius }) {
         className="absolute inset-0 w-full h-full"
         style={{ background: '#000' }}
       />
-      {playing && (
+      {playing && isMobile && (
         <div
-          className="absolute inset-0"
-          style={{ cursor: 'pointer', zIndex: 1 }}
+          className="absolute inset-x-0 top-0"
+          style={{ bottom: 72, cursor: 'pointer', zIndex: 1 }}
           onClick={togglePlayback}
         />
       )}
