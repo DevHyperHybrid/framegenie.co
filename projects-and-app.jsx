@@ -309,11 +309,15 @@ function ProjectsSection() {
   useLayoutEffect(() => {
     const equalize = () => {
       const cards = containerRef.current?.querySelectorAll('[data-project-card]');
+      const section = containerRef.current?.closest('.project-stack-section');
       if (!cards || !cards.length) return;
       cards.forEach(c => { c.style.minHeight = ''; });
       let max = 0;
       cards.forEach(c => { max = Math.max(max, c.offsetHeight); });
       cards.forEach(c => { c.style.minHeight = max + 'px'; });
+      if (section && window.matchMedia('(max-width: 767px)').matches) {
+        section.style.setProperty('--project-stack-gap', max + 'px');
+      }
     };
     equalize();
     const t = setTimeout(equalize, 300);
