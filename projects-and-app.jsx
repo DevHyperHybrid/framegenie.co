@@ -259,20 +259,17 @@ function ProjectVideo({ num, radius }) {
   );
 }
 
-function ProjectCard({ project, index, progress, mobileGap }) {
+function ProjectCard({ project, index, progress }) {
   const targetScale = 1 - (TOTAL - 1 - index) * 0.03;
   const scale = useTransform(progress, [index / TOTAL, 1], [1, targetScale]);
   const imgRadius = 'clamp(20px, 4vw, 60px)';
-  const top = mobileGap > 0
-    ? `calc(var(--project-stack-top) + ${index * mobileGap}px)`
-    : getStackTop(index);
 
   return (
     <motion.div
       data-project-card
       style={{
         position: 'sticky',
-        top,
+        top: getStackTop(index),
         zIndex: index + 1,
         scale,
         transformOrigin: 'top center',
@@ -308,9 +305,6 @@ function ProjectsSection() {
     target: containerRef,
     offset: ['start start', 'end end']
   });
-  const [mobileGap, setMobileGap] = useState(0);
-  const lastGapRef = useRef(0);
-
   useLayoutEffect(() => {
     const equalize = () => {
       const cards = containerRef.current?.querySelectorAll('[data-project-card]');
@@ -319,12 +313,6 @@ function ProjectsSection() {
       let max = 0;
       cards.forEach(c => { max = Math.max(max, c.offsetHeight); });
       cards.forEach(c => { c.style.minHeight = max + 'px'; });
-      const isMobile = window.matchMedia('(max-width: 767px)').matches;
-      const gap = isMobile ? max : 0;
-      if (gap !== lastGapRef.current) {
-        lastGapRef.current = gap;
-        setMobileGap(gap);
-      }
     };
     equalize();
     const t = setTimeout(equalize, 300);
@@ -343,7 +331,7 @@ function ProjectsSection() {
       </FadeIn>
       <div ref={containerRef} className="project-scroll-track">
         {PROJECTS.map((p, i) =>
-        <ProjectCard key={p.num} project={p} index={i} progress={scrollYProgress} mobileGap={mobileGap} />
+        <ProjectCard key={p.num} project={p} index={i} progress={scrollYProgress} />
         )}
       </div>
     </section>);
