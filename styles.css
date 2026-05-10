@@ -91,6 +91,10 @@ body {
   .project-main-wrap > div {
     aspect-ratio: 9 / 16 !important;
   }
+
+  .project-stack-section {
+    --project-stack-gap: 60px;
+  }
 }
 
 @media (max-width: 1279px) {
