@@ -259,17 +259,20 @@ function ProjectVideo({ num, radius }) {
   );
 }
 
-function ProjectCard({ project, index, progress }) {
+function ProjectCard({ project, index, progress, mobileGap }) {
   const targetScale = 1 - (TOTAL - 1 - index) * 0.03;
   const scale = useTransform(progress, [index / TOTAL, 1], [1, targetScale]);
   const imgRadius = 'clamp(20px, 4vw, 60px)';
+  const top = mobileGap > 0
+    ? `calc(var(--project-stack-top) + ${index * mobileGap}px)`
+    : getStackTop(index);
 
   return (
     <motion.div
       data-project-card
       style={{
         position: 'sticky',
-        top: getStackTop(index),
+        top,
         zIndex: index + 1,
         scale,
         transformOrigin: 'top center',
@@ -305,18 +308,22 @@ function ProjectsSection() {
     target: containerRef,
     offset: ['start start', 'end end']
   });
+  const [mobileGap, setMobileGap] = useState(0);
+  const lastGapRef = useRef(0);
 
   useLayoutEffect(() => {
     const equalize = () => {
       const cards = containerRef.current?.querySelectorAll('[data-project-card]');
-      const section = containerRef.current?.closest('.project-stack-section');
       if (!cards || !cards.length) return;
       cards.forEach(c => { c.style.minHeight = ''; });
       let max = 0;
       cards.forEach(c => { max = Math.max(max, c.offsetHeight); });
       cards.forEach(c => { c.style.minHeight = max + 'px'; });
-      if (section && window.matchMedia('(max-width: 767px)').matches) {
-        section.style.setProperty('--project-stack-gap', max + 'px');
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      const gap = isMobile ? max : 0;
+      if (gap !== lastGapRef.current) {
+        lastGapRef.current = gap;
+        setMobileGap(gap);
       }
     };
     equalize();
@@ -336,7 +343,7 @@ function ProjectsSection() {
       </FadeIn>
       <div ref={containerRef} className="project-scroll-track">
         {PROJECTS.map((p, i) =>
-        <ProjectCard key={p.num} project={p} index={i} progress={scrollYProgress} />
+        <ProjectCard key={p.num} project={p} index={i} progress={scrollYProgress} mobileGap={mobileGap} />
         )}
       </div>
     </section>);
