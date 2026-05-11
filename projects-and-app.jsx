@@ -230,8 +230,8 @@ function ProjectVideo({ num, radius }) {
       />
       {playing && isMobile && (
         <div
-          className="absolute inset-x-0 top-0"
-          style={{ bottom: 72, cursor: 'pointer', zIndex: 1 }}
+          className="absolute inset-x-0"
+          style={{ top: '25%', bottom: '25%', cursor: 'pointer', zIndex: 1 }}
           onClick={togglePlayback}
         />
       )}
