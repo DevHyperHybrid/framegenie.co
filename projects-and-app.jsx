@@ -150,10 +150,10 @@ function ProjectVideo({ num, radius }) {
     if (!el || !v) return;
     const near = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { v.preload = 'metadata'; v.load(); near.disconnect(); }
-    }, { rootMargin: '600px' });
+    }, { rootMargin: '800px' });
     const close = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { v.preload = 'auto'; v.load(); close.disconnect(); }
-    }, { rootMargin: '100px' });
+    }, { rootMargin: '800px' });
     near.observe(el);
     close.observe(el);
     return () => { near.disconnect(); close.disconnect(); };
