@@ -99,14 +99,14 @@ const getStackTop = (i) => {
 };
 
 const VIDEO_SOURCES = {
-  '1': { src: 'https://file.garden/agB6zAeEOEJL_pd7/1.mp4' },
-  '2': { src: 'https://file.garden/agB6zAeEOEJL_pd7/2.mp4' },
-  '3': { src: 'https://file.garden/agB6zAeEOEJL_pd7/3.mp4' },
-  '4': { src: 'https://file.garden/agB6zAeEOEJL_pd7/4.mp4' },
-  '5': { src: 'https://file.garden/agB6zAeEOEJL_pd7/5.mp4' },
-  '6': { src: 'https://file.garden/agB6zAeEOEJL_pd7/6.mp4' },
-  '7': { src: 'https://file.garden/agB6zAeEOEJL_pd7/7.mp4' },
-  '8': { src: 'https://file.garden/agB6zAeEOEJL_pd7/8.mp4' },
+  '1': { src: 'https://file.garden/agB6zAeEOEJL_pd7/1.mp4', poster: PROJECTS[0].col2 },
+  '2': { src: 'https://file.garden/agB6zAeEOEJL_pd7/2.mp4', poster: PROJECTS[1].col2 },
+  '3': { src: 'https://file.garden/agB6zAeEOEJL_pd7/3.mp4', poster: PROJECTS[2].col2 },
+  '4': { src: 'https://file.garden/agB6zAeEOEJL_pd7/4.mp4', poster: PROJECTS[3].col2 },
+  '5': { src: 'https://file.garden/agB6zAeEOEJL_pd7/5.mp4', poster: PROJECTS[4].col2 },
+  '6': { src: 'https://file.garden/agB6zAeEOEJL_pd7/6.mp4', poster: PROJECTS[5].col2 },
+  '7': { src: 'https://file.garden/agB6zAeEOEJL_pd7/7.mp4', poster: PROJECTS[6].col2 },
+  '8': { src: 'https://file.garden/agB6zAeEOEJL_pd7/8.mp4', poster: PROJECTS[7].col2 },
 };
 
 
@@ -140,6 +140,18 @@ function ProjectVideo({ num, radius }) {
     const update = () => setIsMobile(mq.matches);
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
+  }, []);
+
+  // Start buffering when card is within 600px of the viewport
+  useEffect(() => {
+    const el = wrapRef.current;
+    const v = videoRef.current;
+    if (!el || !v) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { v.preload = 'auto'; v.load(); observer.disconnect(); }
+    }, { rootMargin: '600px' });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
 
@@ -213,7 +225,8 @@ function ProjectVideo({ num, radius }) {
       <video
         ref={videoRef}
         src={source.src}
-        preload="auto"
+        preload="none"
+        poster={source.poster}
         playsInline
         controls={playing}
         onPlaying={() => setBuffering(false)}
