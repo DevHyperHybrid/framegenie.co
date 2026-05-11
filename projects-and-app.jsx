@@ -142,14 +142,6 @@ function ProjectVideo({ num, radius }) {
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // Force buffering to start immediately on all devices.
-  // Mobile browsers ignore preload="auto", but they DO buffer a muted video.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = true;
-    v.play().then(() => v.pause()).catch(() => {});
-  }, []);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -204,7 +196,8 @@ function ProjectVideo({ num, radius }) {
     window.dispatchEvent(new CustomEvent('projectvideo:play', { detail: num }));
     setPlaying(true);
     setBuffering(true);
-    v.play().catch(() => {});
+    const p = v.play();
+    if (p) p.catch(() => { setPlaying(false); setBuffering(false); });
   };
 
   const wrapStyle = { borderRadius: radius, border: '1.5px solid rgba(215, 226, 234, 0.35)', background: '#000' };
@@ -224,6 +217,7 @@ function ProjectVideo({ num, radius }) {
         playsInline
         controls={playing}
         onPlaying={() => setBuffering(false)}
+        onCanPlay={() => setBuffering(false)}
         onWaiting={() => setBuffering(true)}
         className="absolute inset-0 w-full h-full"
         style={{ background: '#000' }}
