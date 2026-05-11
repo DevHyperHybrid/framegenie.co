@@ -99,14 +99,14 @@ const getStackTop = (i) => {
 };
 
 const VIDEO_SOURCES = {
-  '1': { src: 'https://file.garden/agB6zAeEOEJL_pd7/1.mp4', poster: PROJECTS[0].col2 },
-  '2': { src: 'https://file.garden/agB6zAeEOEJL_pd7/2.mp4', poster: PROJECTS[1].col2 },
-  '3': { src: 'https://file.garden/agB6zAeEOEJL_pd7/3.mp4', poster: PROJECTS[2].col2 },
-  '4': { src: 'https://file.garden/agB6zAeEOEJL_pd7/4.mp4', poster: PROJECTS[3].col2 },
-  '5': { src: 'https://file.garden/agB6zAeEOEJL_pd7/5.mp4', poster: PROJECTS[4].col2 },
-  '6': { src: 'https://file.garden/agB6zAeEOEJL_pd7/6.mp4', poster: PROJECTS[5].col2 },
-  '7': { src: 'https://file.garden/agB6zAeEOEJL_pd7/7.mp4', poster: PROJECTS[6].col2 },
-  '8': { src: 'https://file.garden/agB6zAeEOEJL_pd7/8.mp4', poster: PROJECTS[7].col2 },
+  '1': { src: 'https://file.garden/agB6zAeEOEJL_pd7/1.mp4' },
+  '2': { src: 'https://file.garden/agB6zAeEOEJL_pd7/2.mp4' },
+  '3': { src: 'https://file.garden/agB6zAeEOEJL_pd7/3.mp4' },
+  '4': { src: 'https://file.garden/agB6zAeEOEJL_pd7/4.mp4' },
+  '5': { src: 'https://file.garden/agB6zAeEOEJL_pd7/5.mp4' },
+  '6': { src: 'https://file.garden/agB6zAeEOEJL_pd7/6.mp4' },
+  '7': { src: 'https://file.garden/agB6zAeEOEJL_pd7/7.mp4' },
+  '8': { src: 'https://file.garden/agB6zAeEOEJL_pd7/8.mp4' },
 };
 
 
@@ -142,16 +142,21 @@ function ProjectVideo({ num, radius }) {
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // Start buffering when card is within 600px of the viewport
+  // Phase 1 (600px away): load metadata → browser shows real first frame at native quality
+  // Phase 2 (100px away): switch to auto → buffers video so play is instant
   useEffect(() => {
     const el = wrapRef.current;
     const v = videoRef.current;
     if (!el || !v) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { v.preload = 'auto'; v.load(); observer.disconnect(); }
+    const near = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { v.preload = 'metadata'; v.load(); near.disconnect(); }
     }, { rootMargin: '600px' });
-    observer.observe(el);
-    return () => observer.disconnect();
+    const close = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { v.preload = 'auto'; v.load(); close.disconnect(); }
+    }, { rootMargin: '100px' });
+    near.observe(el);
+    close.observe(el);
+    return () => { near.disconnect(); close.disconnect(); };
   }, []);
 
 
@@ -226,7 +231,6 @@ function ProjectVideo({ num, radius }) {
         ref={videoRef}
         src={source.src}
         preload="none"
-        poster={source.poster}
         playsInline
         controls={playing}
         onPlaying={() => setBuffering(false)}
