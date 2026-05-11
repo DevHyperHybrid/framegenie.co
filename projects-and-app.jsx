@@ -131,16 +131,8 @@ function ProjectVideo({ num, radius }) {
   const source = VIDEO_SOURCES[String(parseInt(num))];
   const [playing, setPlaying] = useState(false);
   const [buffering, setBuffering] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1279px)').matches);
   const videoRef = useRef(null);
   const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1279px)');
-    const update = () => setIsMobile(mq.matches);
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
 
   // Phase 1 (600px away): load metadata → browser shows real first frame at native quality
   // Phase 2 (100px away): switch to auto → buffers video so play is instant
