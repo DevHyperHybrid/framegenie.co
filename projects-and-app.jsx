@@ -100,15 +100,17 @@ const getStackTop = (i) => {
 
 // ar = intrinsic aspect ratio (width / height) of each compressed clip.
 // The card frame adopts this so the whole video shows with no bars and no crop.
+// poster = tiny WebP first-frame so the card paints instantly with zero video bytes;
+// the MP4 itself only downloads when the user presses play (preload="none").
 const VIDEO_SOURCES = {
-  '1': { src: 'assets/videos/1.mp4', ar: 720 / 1280 },
-  '2': { src: 'assets/videos/2.mp4', ar: 720 / 1280 },
-  '3': { src: 'assets/videos/3.mp4', ar: 1280 / 720 },
-  '4': { src: 'assets/videos/4.mp4', ar: 714 / 1280 },
-  '5': { src: 'assets/videos/5.mp4', ar: 722 / 1280 },
-  '6': { src: 'assets/videos/6.mp4', ar: 720 / 1280 },
-  '7': { src: 'assets/videos/7.mp4', ar: 712 / 1280 },
-  '8': { src: 'assets/videos/8.mp4', ar: 732 / 1280 },
+  '1': { src: 'assets/videos/1.mp4', poster: 'assets/videos/posters/1.webp', ar: 720 / 1280 },
+  '2': { src: 'assets/videos/2.mp4', poster: 'assets/videos/posters/2.webp', ar: 720 / 1280 },
+  '3': { src: 'assets/videos/3.mp4', poster: 'assets/videos/posters/3.webp', ar: 1280 / 720 },
+  '4': { src: 'assets/videos/4.mp4', poster: 'assets/videos/posters/4.webp', ar: 714 / 1280 },
+  '5': { src: 'assets/videos/5.mp4', poster: 'assets/videos/posters/5.webp', ar: 722 / 1280 },
+  '6': { src: 'assets/videos/6.mp4', poster: 'assets/videos/posters/6.webp', ar: 720 / 1280 },
+  '7': { src: 'assets/videos/7.mp4', poster: 'assets/videos/posters/7.webp', ar: 712 / 1280 },
+  '8': { src: 'assets/videos/8.mp4', poster: 'assets/videos/posters/8.webp', ar: 732 / 1280 },
 };
 
 
@@ -136,23 +138,10 @@ function ProjectVideo({ num, radius }) {
   const videoRef = useRef(null);
   const wrapRef = useRef(null);
 
-  // Phase 1 (600px away): load metadata → browser shows real first frame at native quality
-  // Phase 2 (100px away): switch to auto → buffers video so play is instant
-  useEffect(() => {
-    const el = wrapRef.current;
-    const v = videoRef.current;
-    if (!el || !v) return;
-    const near = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { v.preload = 'metadata'; v.load(); near.disconnect(); }
-    }, { rootMargin: '800px' });
-    const close = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { v.preload = 'auto'; v.load(); close.disconnect(); }
-    }, { rootMargin: '800px' });
-    near.observe(el);
-    close.observe(el);
-    return () => { near.disconnect(); close.disconnect(); };
-  }, []);
-
+  // No preloading: the poster shows the first frame instantly with zero video bytes, and
+  // the MP4 only downloads when the user presses play (handlePlay raises preload to 'auto').
+  // The clips are faststart + GitHub Pages serves byte ranges, so play() streams from the
+  // first chunk without any up-front download (this is what made the page slow before).
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -204,6 +193,9 @@ function ProjectVideo({ num, radius }) {
     const v = videoRef.current;
     if (!v) return;
     v.muted = false;
+    // Raise preload only now (imperative, not via JSX, so framer-motion re-renders can't
+    // revert it). Don't call v.load() — play() starts the fetch; load() would abort/restart it.
+    v.preload = 'auto';
     window.dispatchEvent(new CustomEvent('projectvideo:play', { detail: num }));
     setPlaying(true);
     setBuffering(true);
@@ -225,7 +217,8 @@ function ProjectVideo({ num, radius }) {
       <video
         ref={videoRef}
         src={source.src}
-        preload="metadata"
+        poster={source.poster}
+        preload="none"
         playsInline
         controls={playing}
         onPlaying={() => setBuffering(false)}
