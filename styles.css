@@ -53,8 +53,8 @@ body {
 }
 
 @keyframes hero-title-marquee {
-  from { transform: translate3d(-50%, 0, 0); }
-  to   { transform: translate3d(0, 0, 0); }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
 }
 
 @keyframes heroPortraitFloat {
@@ -74,7 +74,7 @@ body {
   }
 
   .hero-title-track {
-    animation-duration: 10s !important;
+    animation-duration: 20s !important;
   }
 
   .hero-portrait-img {
@@ -89,7 +89,7 @@ body {
   }
 
   .project-main-wrap > div {
-    aspect-ratio: 9 / 16 !important;
+    aspect-ratio: var(--ar, 9 / 16) !important;
   }
 
 
@@ -264,11 +264,33 @@ body {
 
 .project-stack-section {
   --project-stack-top: clamp(4.5rem, 8vh, 6rem);
-  --project-stack-gap: 22px;
+  --project-stack-gap: 18px;
+  --project-stack-vph: 100vh;
+  --project-stack-bottom-gap: 16px;
+  /* Where the last (8th) card pins. The video frame is capped so this deepest
+     card still fits the viewport — keeping the staircase clean AND fully visible. */
+  --project-deepest-top: calc(var(--project-stack-top) + 7 * var(--project-stack-gap));
+  /* Non-video card chrome (header + paddings + stacked description on mobile). */
+  --project-card-chrome: 224px;
+  --project-frame-cap: calc(var(--project-stack-vph) - var(--project-deepest-top) - var(--project-card-chrome) - var(--project-stack-bottom-gap));
+}
+
+@supports (height: 100dvh) {
+  .project-stack-section {
+    --project-stack-vph: 100dvh;
+  }
 }
 
 .project-scroll-track {
   min-height: 0;
+}
+
+/* Extra sticky runway after the last card so the deepest cards reach their pinned
+   positions (clean staircase) before the section ends. Card 8 stays fully visible
+   over this space, then the contact section slides up over it — no visible gap. */
+.project-stack-runway {
+  height: clamp(140px, 22vh, 260px);
+  pointer-events: none;
 }
 
 .project-card-header {
@@ -309,39 +331,89 @@ body {
   grid-column: 2;
   grid-row: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The video frame adopts each clip's own aspect ratio (--ar) so the whole video
+   shows with no letterbox/pillarbox bars and no cropping. Its size is capped to
+   --project-frame-cap so the deepest-stacked card still fits the viewport. */
+.project-video-frame {
+  --frame-ideal: 60vh;
+  aspect-ratio: var(--ar, 16 / 9);
+}
+.project-video-frame.is-portrait {
+  height: min(var(--project-frame-cap), var(--frame-ideal));
+  width: auto;
+  max-width: 100%;
+}
+.project-video-frame.is-landscape {
+  width: min(100%, calc(min(var(--project-frame-cap), var(--frame-ideal)) * var(--ar)));
+  height: auto;
 }
 
 @media (min-width: 1280px) {
-  .project-stack-section {
-    --project-stack-top: clamp(4.5rem, 8vh, 6rem);
-    --project-stack-gap: 48px;
-  }
-  .project-card-header { column-gap: 1.5rem; }
-  .project-card-number { font-size: clamp(2.5rem, 8vw, 120px); }
-  .project-card-category { font-size: clamp(0.65rem, 1.2vw, 1rem); }
-  .project-card-title { font-size: clamp(1rem, 2.5vw, 2rem); }
-  .project-media-grid { display: flex; flex-direction: row; gap: 1rem; }
-  .project-side-column {
+  .hero-title-track {
     display: flex;
-    flex: 0 0 38%;
-    flex-direction: column;
-    gap: 1rem;
+    width: max-content;
+    animation: hero-title-marquee 22s linear infinite;
+    backface-visibility: hidden;
+    will-change: transform;
   }
+  .hero-title-group {
+    display: flex !important;
+    flex: 0 0 auto;
+    gap: 5ch;
+    padding-right: 5ch;
+  }
+  .hero-title-copy {
+    display: inline-block !important;
+  }
+
+  .project-stack-section {
+    --project-stack-top: clamp(3.5rem, 6vh, 5rem);
+    --project-stack-gap: 18px;
+    --project-card-chrome: 388px;
+  }
+  .project-video-frame { --frame-ideal: clamp(340px, 60vh, 680px); }
+  .project-card-header { column-gap: 1.5rem; }
+  .project-card-number { font-size: clamp(2rem, 4.5vw, 84px); }
+  .project-card-category { font-size: clamp(0.65rem, 1.2vw, 1rem); }
+  .project-card-title { font-size: clamp(1rem, 2vw, 1.6rem); }
+  /* Narrow the whole card so it hugs the stacked content like the iPad reference,
+     instead of a wide card with a small centered column lost in the middle. */
+  [data-project-card] {
+    max-width: clamp(560px, 56vw, 780px);
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  /* Stacked "iPad" layout: full-width description bar on top, video centered below. */
+  .project-media-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1rem, 1.8vw, 1.6rem);
+    width: 100%;
+    max-width: clamp(440px, 90%, 660px);
+    margin: 0 auto;
+  }
+  .project-side-column { display: contents; }
   .project-description-card {
-    min-height: 0;
-    flex: 1;
+    width: 100%;
     height: auto;
+    min-height: 0;
+    padding: clamp(1.25rem, 1.7vw, 2rem) !important;
+  }
+  .project-description-copy {
+    font-size: clamp(1rem, 1.2vw, 1.3rem) !important;
+    line-height: 1.6 !important;
   }
   .project-main-wrap {
-    flex: 1 1 0;
-    min-width: 0;
+    width: 100%;
     display: flex;
-    align-items: stretch;
-  }
-  .project-main-wrap > div {
-    flex: 1;
-    aspect-ratio: auto !important;
-    height: clamp(320px, 55vh, 640px);
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -426,47 +498,47 @@ body {
   /* ── Projects ── */
   .project-stack-section {
     --project-stack-top: clamp(2.5rem, 5vh, 3.5rem);
-    --project-stack-gap: 14px;
+    --project-stack-gap: 12px;
+    --project-card-chrome: 196px;
     padding-top: 3rem !important;
     padding-bottom: 6rem !important;
   }
+  .project-video-frame { --frame-ideal: clamp(150px, 52vh, 460px); }
 
+  /* Stacked "iPad" layout (short landscape screens). */
+  [data-project-card] {
+    max-width: clamp(480px, 62vw, 680px);
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
   .project-media-grid {
-    flex-direction: row;
-    gap: 0.65rem;
-  }
-
-  .project-side-column {
     display: flex;
-    flex: 0 0 34%;
     flex-direction: column;
-    gap: 0.65rem;
+    align-items: center;
+    gap: clamp(0.6rem, 1.4vh, 1.1rem);
+    width: 100%;
+    max-width: clamp(320px, 88%, 520px);
+    margin: 0 auto;
   }
-
+  .project-side-column { display: contents; }
   .project-description-card {
-    flex: 1;
-    min-height: 0;
+    width: 100%;
     height: auto;
+    min-height: 0;
+    padding: clamp(0.75rem, 1.5vh, 1.35rem) !important;
   }
-
   .project-main-wrap {
-    flex: 1 1 0;
-    min-width: 0;
+    width: 100%;
     display: flex;
-    align-items: stretch;
-  }
-
-  .project-main-wrap > div {
-    flex: 1;
-    aspect-ratio: auto !important;
-    height: clamp(130px, 52vh, 220px);
+    align-items: center;
+    justify-content: center;
   }
 
   .project-card-number { font-size: clamp(1.6rem, 5vw, 2rem) !important; }
   .project-card-title  { font-size: clamp(0.6rem, 1.5vw, 0.78rem) !important; }
   .project-card-category { font-size: clamp(0.38rem, 1vw, 0.5rem) !important; }
   .project-description-copy {
-    font-size: clamp(0.6rem, 1.3vw, 0.74rem) !important;
-    line-height: 1.4 !important;
+    font-size: clamp(0.72rem, 1.6vh, 0.95rem) !important;
+    line-height: 1.45 !important;
   }
 }

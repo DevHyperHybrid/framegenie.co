@@ -180,19 +180,19 @@ function HeroSection() {
       <div className="hero-title-stage overflow-hidden w-full text-center">
         <FadeIn delay={0.15} y={40}>
           <h1
-            aria-label="HI I'M ALI"
+            aria-label="AI VIDEO SPECIALIST"
             className="hero-heading hero-title font-black uppercase tracking-tight leading-none whitespace-nowrap w-full text-[14vw] mt-6 xl:text-[17.5vw] xl:-mt-5"
             style={{ display: 'block' }}>
             
             <span className="hero-title-track" aria-hidden="true">
               <span className="hero-title-group">
                 {heroTitleCopies.map((c) =>
-                <span key={c} className="hero-heading hero-title-copy">HI I'M ALI</span>
+                <span key={c} className="hero-heading hero-title-copy">AI VIDEO SPECIALIST</span>
                 )}
               </span>
               <span className="hero-title-group">
                 {heroTitleCopies.map((c) =>
-                <span key={c} className="hero-heading hero-title-copy">HI I'M ALI</span>
+                <span key={c} className="hero-heading hero-title-copy">AI VIDEO SPECIALIST</span>
                 )}
               </span>
             </span>

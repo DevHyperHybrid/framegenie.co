@@ -1,0 +1,12 @@
+# Portable ffmpeg build (303 MB) — local tooling only, not part of the site
+tools/
+
+# Original uncompressed video uploads — the optimized assets/videos/*.mp4 are what ships
+assets/videos/raw/
+
+# Claude Code local config
+.claude/
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store

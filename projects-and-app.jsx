@@ -98,15 +98,17 @@ const getStackTop = (i) => {
   return `calc(${STACK_TOP} + ${Array.from({ length: i }, () => STACK_GAP).join(' + ')})`;
 };
 
+// ar = intrinsic aspect ratio (width / height) of each compressed clip.
+// The card frame adopts this so the whole video shows with no bars and no crop.
 const VIDEO_SOURCES = {
-  '1': { src: 'https://file.garden/agB6zAeEOEJL_pd7/1.mp4' },
-  '2': { src: 'https://file.garden/agB6zAeEOEJL_pd7/2.mp4' },
-  '3': { src: 'https://file.garden/agB6zAeEOEJL_pd7/3.mp4' },
-  '4': { src: 'https://file.garden/agB6zAeEOEJL_pd7/4.mp4' },
-  '5': { src: 'https://file.garden/agB6zAeEOEJL_pd7/5.mp4' },
-  '6': { src: 'https://file.garden/agB6zAeEOEJL_pd7/6.mp4' },
-  '7': { src: 'https://file.garden/agB6zAeEOEJL_pd7/7.mp4' },
-  '8': { src: 'https://file.garden/agB6zAeEOEJL_pd7/8.mp4' },
+  '1': { src: 'assets/videos/1.mp4', ar: 720 / 1280 },
+  '2': { src: 'assets/videos/2.mp4', ar: 720 / 1280 },
+  '3': { src: 'assets/videos/3.mp4', ar: 1280 / 720 },
+  '4': { src: 'assets/videos/4.mp4', ar: 714 / 1280 },
+  '5': { src: 'assets/videos/5.mp4', ar: 722 / 1280 },
+  '6': { src: 'assets/videos/6.mp4', ar: 720 / 1280 },
+  '7': { src: 'assets/videos/7.mp4', ar: 712 / 1280 },
+  '8': { src: 'assets/videos/8.mp4', ar: 732 / 1280 },
 };
 
 
@@ -209,7 +211,8 @@ function ProjectVideo({ num, radius }) {
     if (p) p.catch(() => { setPlaying(false); setBuffering(false); });
   };
 
-  const wrapStyle = { borderRadius: radius, border: '1.5px solid rgba(215, 226, 234, 0.35)', background: '#000' };
+  const portrait = source.ar < 1;
+  const wrapStyle = { borderRadius: radius, border: '1.5px solid rgba(215, 226, 234, 0.35)', background: '#000', '--ar': source.ar };
 
   const togglePlayback = () => {
     if (!videoRef.current) return;
@@ -218,17 +221,17 @@ function ProjectVideo({ num, radius }) {
   };
 
   return (
-    <div ref={wrapRef} className="w-full relative overflow-hidden aspect-video" style={wrapStyle}>
+    <div ref={wrapRef} className={`project-video-frame relative overflow-hidden ${portrait ? 'is-portrait' : 'is-landscape'}`} style={wrapStyle}>
       <video
         ref={videoRef}
         src={source.src}
-        preload="none"
+        preload="metadata"
         playsInline
         controls={playing}
         onPlaying={() => setBuffering(false)}
         onCanPlay={() => setBuffering(false)}
         onWaiting={() => setBuffering(true)}
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full object-contain"
         style={{ background: '#000' }}
       />
       {!playing && (
@@ -270,7 +273,8 @@ function ProjectCard({ project, index, progress }) {
         scale,
         transformOrigin: 'top center',
         background: '#0C0C0C',
-        marginBottom: '1rem'
+        // scroll runway during which a pinned card rests fully visible before the next covers it
+        marginBottom: 'clamp(1.5rem, 8vh, 4.5rem)'
       }}
       className="w-full rounded-[40px] border-2 border-[#D7E2EA] p-4 md:p-6 xl:rounded-[60px] xl:p-8">
       
@@ -301,21 +305,37 @@ function ProjectsSection() {
     target: containerRef,
     offset: ['start start', 'end end']
   });
+
+  // Measure each card's non-video height (header + description + padding) and feed the
+  // max back as --project-card-chrome, so the video is capped to exactly fit the
+  // staircase on every screen — no overflow, no wasted slack — regardless of how the
+  // description text reflows. Chrome is independent of video size, so one pass converges.
   useLayoutEffect(() => {
-    const equalize = () => {
-      const cards = containerRef.current?.querySelectorAll('[data-project-card]');
-      if (!cards || !cards.length) return;
-      cards.forEach(c => { c.style.minHeight = ''; });
-      let max = 0;
-      cards.forEach(c => { max = Math.max(max, c.offsetHeight); });
-      cards.forEach(c => { c.style.minHeight = max + 'px'; });
+    const measure = () => {
+      const cont = containerRef.current;
+      if (!cont) return;
+      // --project-frame-cap is declared on the section, so the chrome var must be set
+      // there (not on the track) for the cap to pick it up.
+      const section = cont.closest('.project-stack-section');
+      if (!section) return;
+      const cards = cont.querySelectorAll('[data-project-card]');
+      let maxChrome = 0;
+      cards.forEach((c) => {
+        const frame = c.querySelector('.project-video-frame');
+        if (!frame) return;
+        maxChrome = Math.max(maxChrome, c.offsetHeight - frame.offsetHeight);
+      });
+      if (maxChrome > 0) section.style.setProperty('--project-card-chrome', Math.ceil(maxChrome) + 'px');
     };
-    equalize();
-    const t = setTimeout(equalize, 300);
-    window.addEventListener('resize', equalize);
+    measure();
+    const raf = requestAnimationFrame(measure);
+    const t = setTimeout(measure, 300);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    window.addEventListener('resize', measure);
     return () => {
+      cancelAnimationFrame(raf);
       clearTimeout(t);
-      window.removeEventListener('resize', equalize);
+      window.removeEventListener('resize', measure);
     };
   }, []);
 
@@ -329,6 +349,9 @@ function ProjectsSection() {
         {PROJECTS.map((p, i) =>
         <ProjectCard key={p.num} project={p} index={i} progress={scrollYProgress} />
         )}
+        {/* Runway so the final card reaches its sticky position with a clean, fully
+            formed staircase instead of the last cards collapsing onto each other. */}
+        <div className="project-stack-runway" aria-hidden="true" />
       </div>
     </section>);
 

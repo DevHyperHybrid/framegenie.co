@@ -1,13 +1,50 @@
+const CONTACT_DRAFT_KEY = 'framegenie-contact-draft';
+
+function loadContactDraft() {
+  try {
+    const raw = localStorage.getItem(CONTACT_DRAFT_KEY);
+    if (!raw) return { name: '', email: '', message: '' };
+    const parsed = JSON.parse(raw);
+    return {
+      name: parsed.name || '',
+      email: parsed.email || '',
+      message: parsed.message || ''
+    };
+  } catch (err) {
+    return { name: '', email: '', message: '' };
+  }
+}
+
 function ContactForm() {
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [message, setMessage] = React.useState('');
+  const draft = React.useRef(loadContactDraft()).current;
+  const [name, setName] = React.useState(draft.name);
+  const [email, setEmail] = React.useState(draft.email);
+  const [message, setMessage] = React.useState(draft.message);
+  const [status, setStatus] = React.useState('idle'); // idle | sending | success | error
+
+  const WEB3FORMS_ACCESS_KEY = '30ff3b82-9b29-47c5-acd4-8424290e248a';
+
+  // Persist every keystroke so the draft survives a page refresh.
+  // Cleared only on a successful send or when the user empties the fields.
+  React.useEffect(() => {
+    try {
+      if (!name && !email && !message) {
+        localStorage.removeItem(CONTACT_DRAFT_KEY);
+      } else {
+        localStorage.setItem(CONTACT_DRAFT_KEY, JSON.stringify({ name, email, message }));
+      }
+    } catch (err) {
+      /* ignore storage failures (private mode, quota, etc.) */
+    }
+  }, [name, email, message]);
 
   const trimmedEmail = email.trim();
   const trimmedMessage = message.trim();
-  const emailValid = trimmedEmail === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  const emailError = trimmedEmail !== '' && !emailValid;
   const nameValid = name.trim().length >= 2;
-  const isValid = nameValid && emailValid;
+  const messageValid = trimmedMessage.length > 0;
+  const isValid = nameValid && emailValid && messageValid;
 
   const inputStyle = {
     background: 'rgba(215, 226, 234, 0.05)',
@@ -17,14 +54,38 @@ function ContactForm() {
     fontSize: '0.95rem'
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return;
-    const emailText = trimmedEmail ? ` (${trimmedEmail})` : '';
-    const messageText = trimmedMessage ? `\n\n${trimmedMessage}` : '';
-    const text = `Hi Ali, I'm ${name.trim()}${emailText}.${messageText}`;
-    const url = `https://wa.me/96170014655?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener');
+    if (!isValid || status === 'sending') return;
+    setStatus('sending');
+
+    const payload = {
+      access_key: WEB3FORMS_ACCESS_KEY,
+      subject: `New portfolio message from ${name.trim()}`,
+      from_name: name.trim(),
+      name: name.trim(),
+      email: trimmedEmail,
+      message: trimmedMessage
+    };
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus('success');
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        setStatus('error');
+      }
+    } catch (err) {
+      setStatus('error');
+    }
   };
 
   return (
@@ -47,33 +108,44 @@ function ContactForm() {
         </label>
         <label className="flex flex-col gap-2">
           <span className="font-medium uppercase tracking-widest text-[0.7rem]" style={{ color: '#D7E2EA', opacity: 0.7 }}>
-            Email <span style={{ fontSize: '0.58rem', opacity: 0.72 }}>(Optional)</span>
+            Email *
           </span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="rounded-xl px-4 py-3 outline-none transition-colors duration-200 focus:border-[#D7E2EA]/60"
-            style={inputStyle} />
+            required
+            aria-invalid={emailError}
+            className={`rounded-xl px-4 py-3 outline-none transition-colors duration-200 ${emailError ? '' : 'focus:border-[#D7E2EA]/60'}`}
+            style={{
+              ...inputStyle,
+              border: emailError ? '1px solid #E08B8B' : inputStyle.border,
+              boxShadow: emailError ? '0 0 0 1px rgba(224, 139, 139, 0.45)' : 'none'
+            }} />
+          {emailError &&
+          <span className="font-light" style={{ color: '#E08B8B', fontSize: '0.75rem' }}>
+            Please enter a valid email address.
+          </span>}
         </label>
       </div>
       <label className="flex flex-col gap-2">
         <span className="font-medium uppercase tracking-widest text-[0.7rem]" style={{ color: '#D7E2EA', opacity: 0.7 }}>
-          Message <span style={{ fontSize: '0.58rem', opacity: 0.72 }}>(Optional)</span>
+          Message *
         </span>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Tell me about your project..."
           rows={5}
+          required
           className="rounded-xl px-4 py-3 outline-none resize-y transition-colors duration-200 focus:border-[#D7E2EA]/60"
           style={inputStyle}>
         </textarea>
       </label>
       <button
         type="submit"
-        disabled={!isValid}
+        disabled={!isValid || status === 'sending'}
         style={{
           background: isValid
             ? 'linear-gradient(123deg, #18011F 7%, #B600A8 37%, #7621B0 72%, #BE4C00 100%)'
@@ -83,13 +155,22 @@ function ContactForm() {
           outlineOffset: '-3px',
           borderRadius: '14px',
           border: 'none',
-          cursor: isValid ? 'pointer' : 'not-allowed',
+          cursor: isValid && status !== 'sending' ? 'pointer' : 'not-allowed',
           fontFamily: 'inherit',
-          opacity: isValid ? 1 : 0.55
+          opacity: isValid && status !== 'sending' ? 1 : 0.55
         }}
         className="contact-submit-button mt-2 w-full py-4 text-white font-medium uppercase tracking-widest transition-opacity duration-200 hover:opacity-90">
-        Send Message
+        {status === 'sending' ? 'Sending…' : status === 'success' ? 'Message Sent ✓' : 'Send Message'}
       </button>
+
+      {status === 'success' &&
+      <p className="text-center font-light" style={{ color: '#7BE0A0', fontSize: '0.85rem' }}>
+        Thanks — your message has been sent. I'll get back to you soon.
+      </p>}
+      {status === 'error' &&
+      <p className="text-center font-light" style={{ color: '#E08B8B', fontSize: '0.85rem' }}>
+        Something went wrong. Please try again or email create@thedigitalfront.co directly.
+      </p>}
     </form>);
 }
 
@@ -131,8 +212,8 @@ function ContactSection() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="contact-card-label font-medium uppercase tracking-widest text-[0.65rem]" style={{ color: '#D7E2EA', opacity: 0.55 }}>Email</span>
-                <a href="mailto:alihamdounn003@gmail.com" className="contact-card-value font-medium truncate transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
-                  alihamdounn003@gmail.com
+                <a href="mailto:create@thedigitalfront.co" className="contact-card-value font-medium truncate transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
+                  create@thedigitalfront.co
                 </a>
               </div>
             </div>
@@ -149,8 +230,8 @@ function ContactSection() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="contact-card-label font-medium uppercase tracking-widest text-[0.65rem]" style={{ color: '#D7E2EA', opacity: 0.55 }}>Phone</span>
-                <a href="tel:+96170014655" className="contact-card-value font-medium transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
-                  +961 70 014 655
+                <a href="tel:+96170622335" className="contact-card-value font-medium transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
+                  +961 70 622 335
                 </a>
               </div>
             </div>
@@ -164,7 +245,7 @@ function ContactSection() {
         <p
           className="font-light uppercase tracking-widest text-center mt-12 xl:mt-16"
           style={{ color: '#D7E2EA', opacity: 0.5, fontSize: 'clamp(0.7rem, 1vw, 0.85rem)' }}>
-          © 2026 Ali — AI Video Specialist
+          © 2026 AI Video Specialist
         </p>
       </div>
     </section>);
