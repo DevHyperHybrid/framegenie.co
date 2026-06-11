@@ -4,6 +4,12 @@ const { motion, useMotionValue, useSpring, useScroll, useTransform, useAnimation
 
 const easeCurve = [0.25, 0.1, 0.25, 1];
 
+// On touch / small screens, momentum scrolling makes the scroll-replay entrance
+// animations re-trigger and fight the scroll (visible stutter). Play them once there.
+const prefersPlayOnce = () =>
+  typeof window !== 'undefined' &&
+  (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 1279px)').matches);
+
 function FadeIn({
   children,
   delay = 0,
@@ -26,9 +32,10 @@ function FadeIn({
     [delay, duration]
   );
   const viewportConfig = viewport ?? { once: true, margin: '-80px', amount: 0 };
+  const replay = replayOnScrollDown && !prefersPlayOnce();
 
   useEffect(() => {
-    if (!replayOnScrollDown) return;
+    if (!replay) return;
     lastScrollY.current = window.scrollY;
     const handleScroll = () => {
       const cur = window.scrollY;
@@ -42,9 +49,9 @@ function FadeIn({
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [controls, hidden, replayOnScrollDown]);
+  }, [controls, hidden, replay]);
 
-  if (replayOnScrollDown) {
+  if (replay) {
     return (
       <motion.div
         ref={ref}
@@ -94,8 +101,10 @@ function AnimatedText({ text, className, style }) {
   const controls = useAnimationControls();
   const scrollDirection = useRef('down');
   const lastScrollY = useRef(0);
+  const replay = !prefersPlayOnce();
 
   useEffect(() => {
+    if (!replay) return;
     lastScrollY.current = window.scrollY;
     const handleScroll = () => {
       const cur = window.scrollY;
@@ -109,7 +118,25 @@ function AnimatedText({ text, className, style }) {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [controls]);
+  }, [controls, replay]);
+
+  const chars = text.split('').map((char, i) => <AnimatedChar key={i} char={char} />);
+
+  // Touch/small screens: play once (no scroll-driven re-trigger that stutters).
+  if (!replay) {
+    return (
+      <motion.p
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px', amount: 0.2 }}
+        variants={textVariants}
+        className={className}
+        style={style}>
+
+        {chars}
+      </motion.p>);
+
+  }
 
   return (
     <motion.p
@@ -125,10 +152,8 @@ function AnimatedText({ text, className, style }) {
       viewport={{ once: false, margin: '-80px', amount: 0.2 }}
       className={className}
       style={style}>
-      
-      {text.split('').map((char, i) =>
-      <AnimatedChar key={i} char={char} />
-      )}
+
+      {chars}
     </motion.p>);
 
 }

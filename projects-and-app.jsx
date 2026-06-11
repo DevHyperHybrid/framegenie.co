@@ -318,7 +318,12 @@ function ProjectsSection() {
       // there (not on the track) for the cap to pick it up.
       const section = cont.closest('.project-stack-section');
       if (!section) return;
-      const cards = cont.querySelectorAll('[data-project-card]');
+      const cards = [...cont.querySelectorAll('[data-project-card]')];
+      if (!cards.length) return;
+      // Equalize via CSS vars (not per-card inline style, which framer-motion clobbers).
+      // Reset min-height to 0 so we read natural heights — chrome is the non-video height
+      // and must be measured before the cards are padded.
+      section.style.setProperty('--project-card-min-h', '0px');
       let maxChrome = 0;
       cards.forEach((c) => {
         const frame = c.querySelector('.project-video-frame');
@@ -326,16 +331,32 @@ function ProjectsSection() {
         maxChrome = Math.max(maxChrome, c.offsetHeight - frame.offsetHeight);
       });
       if (maxChrome > 0) section.style.setProperty('--project-card-chrome', Math.ceil(maxChrome) + 'px');
+      // Reading offsetHeight forces a synchronous reflow with the new cap (videos resized),
+      // so the max here reflects final heights. Equalize every card to the tallest so the
+      // landscape-video card (#3) matches the portrait cards. Its content is centered (CSS)
+      // so the extra height reads as balanced padding, not an empty bottom.
+      let maxH = 0;
+      cards.forEach((c) => { maxH = Math.max(maxH, c.offsetHeight); });
+      if (maxH > 0) section.style.setProperty('--project-card-min-h', Math.round(maxH) + 'px');
     };
     measure();
     const raf = requestAnimationFrame(measure);
     const t = setTimeout(measure, 300);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-    window.addEventListener('resize', measure);
+    // Only re-measure when the width actually changes. On mobile, scrolling toggles the
+    // address bar which fires resize with a changed *height* — re-measuring there caused
+    // the videos to resize mid-scroll and the scroll to stutter/jump.
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      measure();
+    };
+    window.addEventListener('resize', onResize);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(t);
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 
