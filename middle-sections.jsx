@@ -17,21 +17,31 @@ const MOBILE_ROW1 = [ALL_IMAGES[0], ALL_IMAGES[6], ALL_IMAGES[4], ALL_IMAGES[2],
 
 function MarqueeSection() {
   const ref = useRef(null);
-  const [offset, setOffset] = useState(0);
+  const row1Ref = useRef(null);
+  const row2Ref = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Drive the parallax by writing transforms directly (rAF-throttled, with an off-screen
+  // bail) instead of setState on every scroll — which used to re-render this whole section
+  // each frame, even while off-screen, stealing main-thread time from the project cards.
   useEffect(() => {
-    const h = () => {
-      const el = ref.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      const raw = (window.scrollY - top + window.innerHeight) * 0.3;
-      setOffset(raw);
+    const el = ref.current;
+    if (!el) return;
+    const base = isMobile ? 200 : 320;
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= 0 || r.top >= window.innerHeight) return; // off-screen: do nothing
+      const off = (window.scrollY - (r.top + window.scrollY) + window.innerHeight) * 0.3 - base;
+      if (row1Ref.current) row1Ref.current.style.transform = `translate3d(${off}px,0,0)`;
+      if (row2Ref.current) row2Ref.current.style.transform = `translate3d(${-off}px,0,0)`;
     };
+    const h = () => { if (!raf) raf = requestAnimationFrame(apply); };
     window.addEventListener('scroll', h, { passive: true });
-    h();
-    return () => window.removeEventListener('scroll', h);
-  }, []);
+    apply();
+    return () => { window.removeEventListener('scroll', h); if (raf) cancelAnimationFrame(raf); };
+  }, [isMobile]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 1279px)');
@@ -48,14 +58,14 @@ function MarqueeSection() {
   return (
     <section ref={ref} className="pt-24 xl:pt-40 pb-10 overflow-hidden" style={{ background: '#0C0C0C' }}>
       <div className="flex flex-col gap-1.5 xl:gap-24">
-        <div className="marquee-row-1 flex justify-center gap-0 xl:gap-36" style={{ transform: `translateX(${offset - (isMobile ? 200 : 320)}px)`, willChange: 'transform' }}>
+        <div ref={row1Ref} className="marquee-row-1 flex justify-center gap-0 xl:gap-36" style={{ transform: `translate3d(${-(isMobile ? 200 : 320)}px,0,0)`, willChange: 'transform' }}>
           {row1Images.map((src, i) => (
             <div key={i} className="flex h-[270px] w-[300px] md:h-[300px] md:w-[340px] lg:h-[330px] lg:w-[390px] flex-shrink-0 items-center justify-center overflow-hidden xl:h-[360px] xl:w-[420px]">
               <img src={src} alt="" loading="lazy" className="w-full h-full object-contain object-center" />
             </div>
           ))}
         </div>
-        <div className="marquee-row-2 flex justify-center gap-6 xl:gap-56" style={{ transform: `translateX(${-(offset - (isMobile ? 200 : 320))}px)`, willChange: 'transform' }}>
+        <div ref={row2Ref} className="marquee-row-2 flex justify-center gap-6 xl:gap-56" style={{ transform: `translate3d(${(isMobile ? 200 : 320)}px,0,0)`, willChange: 'transform' }}>
           {row2Images.map((src, i) => (
             <div key={i} className="flex h-[270px] w-auto md:h-[300px] lg:h-[330px] flex-shrink-0 items-center justify-center xl:h-[360px] xl:w-[420px] xl:overflow-hidden"
               style={isMobile && i === 3 ? { marginLeft: '83px' } : {}}>

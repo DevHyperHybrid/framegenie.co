@@ -219,7 +219,13 @@ function ProjectCard({ project, index, progress }) {
         transformOrigin: 'top center',
         background: '#0C0C0C',
         // scroll runway during which a pinned card rests fully visible before the next covers it
-        marginBottom: 'clamp(1.5rem, 8vh, 4.5rem)'
+        marginBottom: 'clamp(1.5rem, 8vh, 4.5rem)',
+        // Promote to its own GPU layer so the per-scroll scale is a pure composited
+        // transform, not a full repaint of the border/rounded corners/text each frame
+        // (the sticky+scale-without-a-layer combo is the main mobile scroll flicker).
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
       }}
       className="w-full rounded-[40px] border-2 border-[#D7E2EA] p-4 md:p-6 xl:rounded-[60px] xl:p-8">
       

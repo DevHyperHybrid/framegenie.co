@@ -97,9 +97,9 @@ body {
 
 @media (max-width: 1279px) {
   .hero-nav {
+    /* Opaque bar — no backdrop-filter: the blur was invisible behind the solid
+       background yet re-rasterized every frame as content scrolled under the fixed nav. */
     background: #0C0C0C;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
   }
 
   .hero-nav-link.is-active {
@@ -262,6 +262,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: var(--project-card-min-h, 0px);
+  /* Keep a card's repaint inside its own box so one card can't dirty the stacked
+     cards behind it; isolate gives each its own stacking context (zIndex still orders). */
+  contain: layout paint;
+  isolation: isolate;
 }
 
 .project-media-grid {
