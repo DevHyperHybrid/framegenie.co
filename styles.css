@@ -364,9 +364,14 @@ body {
   width: auto;
   max-width: 100%;
 }
+/* Landscape clip lives in a portrait-tall card (heights are equalized). Give its frame
+   the same full media box as the portrait cards and letterbox the wide video inside it
+   (object-contain) — so the video is large, native iOS controls have room, and the whole
+   thing stays clipped in the card instead of a short strip the iOS player overflows. */
 .project-video-frame.is-landscape {
-  width: min(100%, calc(min(var(--project-frame-cap), var(--frame-ideal)) * var(--ar)));
-  height: auto;
+  width: 100%;
+  height: min(var(--project-frame-cap), var(--frame-ideal));
+  aspect-ratio: auto;
 }
 
 @media (min-width: 1280px) {
