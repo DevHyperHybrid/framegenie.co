@@ -277,9 +277,12 @@ body {
 }
 
 .project-stack-section {
-  --project-stack-top: clamp(4.5rem, 8vh, 6rem);
+  /* --vph-stable is a px viewport height set by JS on load + width/orientation changes
+     only (never on scroll), so the whole projects layout stays put while the mobile
+     address bar shows/hides. Falls back to svh/vh before JS runs. */
+  --project-stack-vph: var(--vph-stable, 100svh);
+  --project-stack-top: clamp(4.5rem, calc(var(--project-stack-vph) * 0.08), 6rem);
   --project-stack-gap: 18px;
-  --project-stack-vph: 100vh;
   --project-stack-bottom-gap: 16px;
   /* Where the last (8th) card pins. The video frame is capped so this deepest
      card still fits the viewport — keeping the staircase clean AND fully visible. */
@@ -287,14 +290,6 @@ body {
   /* Non-video card chrome (header + paddings + stacked description on mobile). */
   --project-card-chrome: 224px;
   --project-frame-cap: calc(var(--project-stack-vph) - var(--project-deepest-top) - var(--project-card-chrome) - var(--project-stack-bottom-gap));
-}
-
-/* svh (small viewport height) is stable as the mobile address bar shows/hides,
-   unlike dvh which changes during scroll and jolts the sticky cards/video sizes. */
-@supports (height: 100svh) {
-  .project-stack-section {
-    --project-stack-vph: 100svh;
-  }
 }
 
 .project-scroll-track {
@@ -305,7 +300,7 @@ body {
    positions (clean staircase) before the section ends. Card 8 stays fully visible
    over this space, then the contact section slides up over it — no visible gap. */
 .project-stack-runway {
-  height: clamp(140px, 22vh, 260px);
+  height: clamp(140px, calc(var(--project-stack-vph) * 0.22), 260px);
   pointer-events: none;
 }
 
@@ -356,7 +351,7 @@ body {
    shows with no letterbox/pillarbox bars and no cropping. Its size is capped to
    --project-frame-cap so the deepest-stacked card still fits the viewport. */
 .project-video-frame {
-  --frame-ideal: 60vh;
+  --frame-ideal: calc(var(--project-stack-vph) * 0.6);
   aspect-ratio: var(--ar, 16 / 9);
 }
 .project-video-frame.is-portrait {
@@ -393,11 +388,11 @@ body {
   }
 
   .project-stack-section {
-    --project-stack-top: clamp(3.5rem, 6vh, 5rem);
+    --project-stack-top: clamp(3.5rem, calc(var(--project-stack-vph) * 0.06), 5rem);
     --project-stack-gap: 18px;
     --project-card-chrome: 388px;
   }
-  .project-video-frame { --frame-ideal: clamp(340px, 60vh, 680px); }
+  .project-video-frame { --frame-ideal: clamp(340px, calc(var(--project-stack-vph) * 0.6), 680px); }
   .project-card-header { column-gap: 1.5rem; }
   .project-card-number { font-size: clamp(2rem, 4.5vw, 84px); }
   .project-card-category { font-size: clamp(0.65rem, 1.2vw, 1rem); }
@@ -518,13 +513,13 @@ body {
 
   /* ── Projects ── */
   .project-stack-section {
-    --project-stack-top: clamp(2.5rem, 5vh, 3.5rem);
+    --project-stack-top: clamp(2.5rem, calc(var(--project-stack-vph) * 0.05), 3.5rem);
     --project-stack-gap: 12px;
     --project-card-chrome: 196px;
     padding-top: 3rem !important;
     padding-bottom: 6rem !important;
   }
-  .project-video-frame { --frame-ideal: clamp(150px, 52vh, 460px); }
+  .project-video-frame { --frame-ideal: clamp(150px, calc(var(--project-stack-vph) * 0.52), 460px); }
 
   /* Stacked "iPad" layout (short landscape screens). */
   [data-project-card] {

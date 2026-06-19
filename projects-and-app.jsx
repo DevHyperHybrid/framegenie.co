@@ -265,6 +265,11 @@ function ProjectsSection() {
       if (!section) return;
       const cards = [...cont.querySelectorAll('[data-project-card]')];
       if (!cards.length) return;
+      // Freeze the viewport height the card/video sizes are computed from. measure() only
+      // runs on load + width/orientation changes (not on scroll), so this stays put while
+      // the mobile address bar shows/hides — otherwise the layout reshapes mid-scroll and
+      // scroll-up vs scroll-down show different states.
+      section.style.setProperty('--vph-stable', Math.round(window.innerHeight) + 'px');
       // Equalize via CSS vars (not per-card inline style, which framer-motion clobbers).
       // Reset min-height to 0 so we read natural heights — chrome is the non-video height
       // and must be measured before the cards are padded.
