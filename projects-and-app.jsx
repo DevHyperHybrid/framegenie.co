@@ -219,7 +219,7 @@ function ProjectCard({ project, index, progress }) {
         transformOrigin: 'top center',
         background: '#0C0C0C',
         // scroll runway during which a pinned card rests fully visible before the next covers it
-        marginBottom: 'clamp(1.5rem, 8vh, 4.5rem)',
+        marginBottom: 'clamp(1.5rem, calc(var(--vph-stable, 100svh) * 0.08), 4.5rem)',
         // Promote to its own GPU layer so the per-scroll scale is a pure composited
         // transform, not a full repaint of the border/rounded corners/text each frame
         // (the sticky+scale-without-a-layer combo is the main mobile scroll flicker).
@@ -271,11 +271,12 @@ function ProjectsSection() {
       if (!section) return;
       const cards = [...cont.querySelectorAll('[data-project-card]')];
       if (!cards.length) return;
-      // Freeze the viewport height the card/video sizes are computed from. measure() only
-      // runs on load + width/orientation changes (not on scroll), so this stays put while
-      // the mobile address bar shows/hides — otherwise the layout reshapes mid-scroll and
-      // scroll-up vs scroll-down show different states.
-      section.style.setProperty('--vph-stable', Math.round(window.innerHeight) + 'px');
+      // Freeze the viewport height the whole page's full-height layout is computed from
+      // (hero height, card/video sizes, card spacing). Set on the document root so every
+      // section inherits it. measure() only runs on load + width/orientation changes (not on
+      // scroll), so this stays put while the mobile address bar shows/hides — otherwise the
+      // hero (and projects) reshape mid-scroll and scroll-up vs scroll-down look different.
+      document.documentElement.style.setProperty('--vph-stable', Math.round(window.innerHeight) + 'px');
       // Equalize via CSS vars (not per-card inline style, which framer-motion clobbers).
       // Reset min-height to 0 so we read natural heights — chrome is the non-video height
       // and must be measured before the cards are padded.

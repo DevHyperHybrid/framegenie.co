@@ -144,7 +144,7 @@ function HeroSection() {
       onPointerCancel={handlePointerEnd}
       onPointerLeave={handlePointerEnd}
       className="h-screen flex flex-col relative"
-      style={{ overflow: 'hidden', touchAction: 'pan-y' }}>
+      style={{ height: 'var(--vph-stable, 100svh)', overflow: 'hidden', touchAction: 'pan-y' }}>
       
       <div
         ref={followZoneRef}
