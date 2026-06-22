@@ -285,6 +285,11 @@ function ProjectsSection() {
       cards.forEach((c) => {
         const frame = c.querySelector('.project-video-frame');
         if (!frame) return;
+        // Skip the landscape card: in the side-by-side layout it stacks its description
+        // above a wide video, so its non-video height is structurally larger than the
+        // portrait cards' — letting it set the chrome would shrink every portrait video.
+        // Its overall height is matched to the others via --project-card-min-h instead.
+        if (frame.classList.contains('is-landscape')) return;
         maxChrome = Math.max(maxChrome, c.offsetHeight - frame.offsetHeight);
       });
       if (maxChrome > 0) section.style.setProperty('--project-card-chrome', Math.ceil(maxChrome) + 'px');

@@ -394,46 +394,94 @@ body {
   .project-stack-section {
     --project-stack-top: clamp(3.5rem, calc(var(--project-stack-vph) * 0.06), 5rem);
     --project-stack-gap: 18px;
-    --project-card-chrome: 388px;
+    /* Side-by-side layout: the only non-video chrome is the header + paddings
+       (the description sits beside the video, not above it), so the video gets far
+       more of the card height than in the old stacked layout. JS measures this
+       precisely on load; the value here is just the pre-JS fallback. */
+    --project-card-chrome: 208px;
+    /* Height the landscape card (#3) reserves for its stacked description + gap, so its
+       wide video is sized to keep that card the same overall height as the portrait cards. */
+    --ls-desc-allow: 200px;
   }
-  .project-video-frame { --frame-ideal: clamp(340px, calc(var(--project-stack-vph) * 0.6), 680px); }
+  .project-video-frame { --frame-ideal: clamp(360px, calc(var(--project-stack-vph) * 0.62), 720px); }
   .project-card-header { column-gap: 1.5rem; }
   .project-card-number { font-size: clamp(2rem, 4.5vw, 84px); }
   .project-card-category { font-size: clamp(0.65rem, 1.2vw, 1rem); }
   .project-card-title { font-size: clamp(1rem, 2vw, 1.6rem); }
-  /* Narrow the whole card so it hugs the stacked content like the iPad reference,
-     instead of a wide card with a small centered column lost in the middle. */
+  /* Wide enough for two comfortable columns (description + video), but tight enough
+     that the flexible description column fills the row with no dead side-space when a
+     vertical clip makes the video narrow (short viewports). */
   [data-project-card] {
-    max-width: clamp(560px, 56vw, 780px);
+    max-width: clamp(720px, 58vw, 920px);
     margin-left: auto !important;
     margin-right: auto !important;
   }
-  /* Stacked "iPad" layout: full-width description bar on top, video centered below. */
+  /* Side-by-side "editorial" layout: description on the left, video on the right.
+     The video is sized by the available card HEIGHT (so a vertical clip stays large
+     on tall AND short viewports), and the description flexes to fill the rest.
+     justify-content:center keeps the pair centered when the description hits its cap. */
   .project-media-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: clamp(1rem, 1.8vw, 1.6rem);
+    justify-content: center;
+    gap: clamp(1.5rem, 3vw, 3.5rem);
     width: 100%;
-    max-width: clamp(440px, 90%, 660px);
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
   }
   .project-side-column { display: contents; }
   .project-description-card {
-    width: 100%;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    max-width: clamp(360px, 40vw, 600px);
     height: auto;
     min-height: 0;
-    padding: clamp(1.25rem, 1.7vw, 2rem) !important;
+    padding: clamp(1.5rem, 2vw, 2.5rem) !important;
   }
   .project-description-copy {
-    font-size: clamp(1rem, 1.2vw, 1.3rem) !important;
-    line-height: 1.6 !important;
+    font-size: clamp(1.05rem, 1.3vw, 1.45rem) !important;
+    line-height: 1.65 !important;
   }
   .project-main-wrap {
-    width: 100%;
+    flex: 0 0 auto;
+    width: auto;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  /* Portrait clip: height-driven — fills the card height, capped so the deepest
+     stacked card still fits the viewport. Width follows from the aspect ratio. */
+  .project-video-frame.is-portrait {
+    height: min(var(--project-frame-cap), var(--frame-ideal));
+    width: auto;
+    max-width: 44vw;
+  }
+  /* The landscape clip (#3) can't share a row with the text — a wide video would
+     squeeze the description into a tall sliver. That one card instead stacks: full-width
+     description on top, wide video below, sized so the card still matches the portrait
+     cards' height (JS leaves it out of the chrome measurement). */
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-media-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-description-card {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-main-wrap {
+    width: 100%;
+  }
+  .project-video-frame.is-landscape {
+    /* Target video height = available card height minus the stacked description; width
+       follows from the aspect ratio (no letterbox) and is clamped to the card width. */
+    --ls-video-h: max(140px, calc(min(var(--project-frame-cap), var(--frame-ideal)) - var(--ls-desc-allow, 0px)));
+    width: min(100%, calc(var(--ls-video-h) * var(--ar)));
+    height: auto;
+    aspect-ratio: var(--ar);
   }
 }
 
@@ -519,39 +567,72 @@ body {
   .project-stack-section {
     --project-stack-top: clamp(2.5rem, calc(var(--project-stack-vph) * 0.05), 3.5rem);
     --project-stack-gap: 12px;
-    --project-card-chrome: 196px;
+    /* Side-by-side: chrome is header + paddings only (JS measures the exact value). */
+    --project-card-chrome: 150px;
+    --ls-desc-allow: 130px;
     padding-top: 3rem !important;
     padding-bottom: 6rem !important;
   }
-  .project-video-frame { --frame-ideal: clamp(150px, calc(var(--project-stack-vph) * 0.52), 460px); }
+  .project-video-frame { --frame-ideal: clamp(180px, calc(var(--project-stack-vph) * 0.66), 520px); }
 
-  /* Stacked "iPad" layout (short landscape screens). */
+  /* Side-by-side on short landscape screens too — a vertical clip needs the card's
+     height, not a stack below the text, to stay a usable size when height is scarce. */
   [data-project-card] {
-    max-width: clamp(480px, 62vw, 680px);
+    max-width: clamp(640px, 94vw, 1040px);
     margin-left: auto !important;
     margin-right: auto !important;
   }
   .project-media-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: clamp(0.6rem, 1.4vh, 1.1rem);
+    justify-content: center;
+    gap: clamp(1rem, 3vw, 2.5rem);
     width: 100%;
-    max-width: clamp(320px, 88%, 520px);
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
   }
   .project-side-column { display: contents; }
   .project-description-card {
-    width: 100%;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    max-width: clamp(280px, 44vw, 560px);
     height: auto;
     min-height: 0;
-    padding: clamp(0.75rem, 1.5vh, 1.35rem) !important;
+    padding: clamp(0.85rem, 1.8vw, 1.5rem) !important;
   }
   .project-main-wrap {
-    width: 100%;
+    flex: 0 0 auto;
+    width: auto;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .project-video-frame.is-portrait {
+    height: min(var(--project-frame-cap), var(--frame-ideal));
+    width: auto;
+    max-width: 40vw;
+  }
+  /* Landscape card (#3) stacks here too — full-width description, wide video below. */
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-media-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-description-card {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+  [data-project-card]:has(.project-video-frame.is-landscape) .project-main-wrap {
+    width: 100%;
+  }
+  .project-video-frame.is-landscape {
+    --ls-video-h: max(110px, calc(min(var(--project-frame-cap), var(--frame-ideal)) - var(--ls-desc-allow, 0px)));
+    width: min(100%, calc(var(--ls-video-h) * var(--ar)));
+    height: auto;
+    aspect-ratio: var(--ar);
   }
 
   .project-card-number { font-size: clamp(1.6rem, 5vw, 2rem) !important; }
