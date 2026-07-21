@@ -165,11 +165,11 @@ function ContactForm() {
 
       {status === 'success' &&
       <p className="text-center font-light" style={{ color: '#7BE0A0', fontSize: '0.85rem' }}>
-        Thanks — your message has been sent. I'll get back to you soon.
+        Thanks! Your message has been sent. I'll get back to you soon.
       </p>}
       {status === 'error' &&
       <p className="text-center font-light" style={{ color: '#E08B8B', fontSize: '0.85rem' }}>
-        Something went wrong. Please try again or email create@thedigitalfront.co directly.
+        Something went wrong. Please try again or email alihamdounn003@gmail.com directly.
       </p>}
     </form>);
 }
@@ -212,8 +212,8 @@ function ContactSection() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="contact-card-label font-medium uppercase tracking-widest text-[0.65rem]" style={{ color: '#D7E2EA', opacity: 0.55 }}>Email</span>
-                <a href="mailto:create@thedigitalfront.co" className="contact-card-value font-medium truncate transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
-                  create@thedigitalfront.co
+                <a href="mailto:alihamdounn003@gmail.com" className="contact-card-value font-medium truncate transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
+                  alihamdounn003@gmail.com
                 </a>
               </div>
             </div>
@@ -230,8 +230,8 @@ function ContactSection() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="contact-card-label font-medium uppercase tracking-widest text-[0.65rem]" style={{ color: '#D7E2EA', opacity: 0.55 }}>WhatsApp</span>
-                <a href="https://wa.me/96170622335?text=Hi%2C%20I%27d%20like%20to%20discuss%20a%20project%20I%20have%20in%20mind." target="_blank" rel="noopener noreferrer" className="contact-card-value font-medium transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
-                  +961 70 622 335
+                <a href="https://wa.me/96170014655?text=Hi%2C%20I%27d%20like%20to%20discuss%20a%20project%20I%20have%20in%20mind." target="_blank" rel="noopener noreferrer" className="contact-card-value font-medium transition-opacity duration-200 hover:opacity-70" style={{ color: '#D7E2EA', fontSize: 'clamp(0.85rem, 1.3vw, 1rem)', textDecoration: 'none' }}>
+                  +961 70 014 655
                 </a>
               </div>
             </div>

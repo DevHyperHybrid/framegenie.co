@@ -79,7 +79,7 @@ function MarqueeSection() {
 }
 
 const ABOUT_TEXT =
-  "Passionate and creative AI content creator who loves building ideas into engaging visual experiences through storytelling, video editing, website creation, and trend-driven content that captures attention and connects with audiences.";
+  "Passionate and creative AI content creator who loves building ideas into engaging visual experiences through storytelling, video editing, and trend-driven content that captures attention and connects with audiences.";
 
 function AboutSection() {
   return (

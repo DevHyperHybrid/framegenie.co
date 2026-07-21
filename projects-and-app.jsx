@@ -1,43 +1,53 @@
+// `num` is the card's position label (always sequential top to bottom); `video` is the clip
+// it plays. They're separate so the running order can be changed without renaming files.
 const PROJECTS = [
 {
   num: '01',
+  video: '1',
   name: 'Your AI Videos Aren\'t Bad, Your System Is',
   desc: 'Most creators fail with AI videos because they chase tools instead of building a workflow. This cinematic AI ad breaks down the real problem behind average AI content.'
 },
 {
   num: '02',
+  video: '2',
   name: 'I Built Everything… And Lost Us Doing It',
   desc: 'A cinematic emotional confrontation between ambition and love, where success slowly destroys the relationship it was meant to protect.'
 },
 {
   num: '03',
+  video: '3',
   name: 'This Is What AI Looks Like in 2026',
   desc: 'AI is no longer robotic or fake-looking. This futuristic cinematic ad showcases how brands now generate premium campaigns through creativity, direction, and AI filmmaking.'
 },
 {
   num: '04',
+  video: '7',
+  name: 'Matchday',
+  desc: 'AI football filmmaking is no longer flat or fake. This stadium reel proves any team, any brand, any message can become cinematic match-day drama. Ideas turned into reality, frame by frame.'
+},
+{
+  num: '05',
+  video: '8',
+  name: 'Hyperreal',
+  desc: 'AI can now render skin, eyes, and reflections close enough to fool you. This track-day reel showcases pore-level facial detail and true-to-life car dynamics, the level of realism AI couldn\'t touch a year ago.'
+},
+{
+  num: '06',
+  video: '5',
+  name: 'Impact',
+  desc: 'AI fight choreography no longer looks scripted or stiff. This octagon showdown showcases real striking, ground grappling, and broadcast-ready crowd energy: no fighters, no cage, no shoot day.'
+},
+{
+  num: '07',
+  video: '4',
   name: 'She Took Care of Everyone Except Herself',
   desc: 'A heartfelt Mother\'s Day AI commercial for BSLC, celebrating the women who give everything and deserve to finally feel cared for too.'
 },
 {
-  num: '05',
-  name: 'The KitKat Truck Theft That Became Marketing Genius',
-  desc: 'What if the biggest marketing campaigns didn\'t look like ads at all? This AI-generated storytelling piece explores the viral "stolen KitKat truck" phenomenon.'
-},
-{
-  num: '06',
+  num: '08',
+  video: '6',
   name: 'Your Treatments Are Tired of Your Expectations',
   desc: 'A funny luxury-clinic AI commercial where aesthetic treatments talk back to impatient clients demanding instant perfection.'
-},
-{
-  num: '07',
-  name: 'Ex Tag Challenge',
-  desc: 'AI-generated video using subtle motion, dynamic effects, and trending audio to create an engaging short-form social media ad designed to boost retention and shares.'
-},
-{
-  num: '08',
-  name: 'I Thought My Pregnant Wife Was Cheating',
-  desc: 'A dramatic AI-generated cinematic product ad built like a story filled with suspicion, heartbreak, and an emotional twist that changes everything.'
 }];
 
 
@@ -59,10 +69,10 @@ const VIDEO_SOURCES = {
   '2': { src: 'assets/videos/2.mp4', poster: 'assets/videos/posters/2.webp', ar: 720 / 1280 },
   '3': { src: 'assets/videos/3.mp4', poster: 'assets/videos/posters/3.webp', ar: 1280 / 720 },
   '4': { src: 'assets/videos/4.mp4', poster: 'assets/videos/posters/4.webp', ar: 714 / 1280 },
-  '5': { src: 'assets/videos/5.mp4', poster: 'assets/videos/posters/5.webp', ar: 722 / 1280 },
+  '5': { src: 'assets/videos/5.mp4', poster: 'assets/videos/posters/5.webp', ar: 1024 / 576 },
   '6': { src: 'assets/videos/6.mp4', poster: 'assets/videos/posters/6.webp', ar: 720 / 1280 },
-  '7': { src: 'assets/videos/7.mp4', poster: 'assets/videos/posters/7.webp', ar: 712 / 1280 },
-  '8': { src: 'assets/videos/8.mp4', poster: 'assets/videos/posters/8.webp', ar: 732 / 1280 },
+  '7': { src: 'assets/videos/7.mp4', poster: 'assets/videos/posters/7.webp', ar: 1024 / 576 },
+  '8': { src: 'assets/videos/8.mp4', poster: 'assets/videos/posters/8.webp', ar: 1024 / 576 },
 };
 
 
@@ -243,7 +253,7 @@ function ProjectCard({ project, index, progress }) {
           </div>
         </div>
         <div className="project-main-wrap">
-          <ProjectVideo num={project.num} radius={imgRadius} />
+          <ProjectVideo num={project.video} radius={imgRadius} />
         </div>
       </div>
     </motion.div>);
@@ -281,16 +291,23 @@ function ProjectsSection() {
       // Reset min-height to 0 so we read natural heights — chrome is the non-video height
       // and must be measured before the cards are padded.
       section.style.setProperty('--project-card-min-h', '0px');
+      // Measure the chrome structurally (paddings + borders + header + its margin) rather
+      // than as "card height minus video height". The subtraction form feeds a measured
+      // height back into --project-card-chrome -> --project-frame-cap -> video height, so it
+      // can latch onto a bad fixed point: an over-large chrome makes the cap negative, the
+      // videos collapse, and the next pass measures an even larger chrome. This form depends
+      // only on the card's own box, so it converges immediately and is identical for
+      // portrait (side-by-side) and landscape (stacked) cards.
       let maxChrome = 0;
       cards.forEach((c) => {
-        const frame = c.querySelector('.project-video-frame');
-        if (!frame) return;
-        // Skip the landscape card: in the side-by-side layout it stacks its description
-        // above a wide video, so its non-video height is structurally larger than the
-        // portrait cards' — letting it set the chrome would shrink every portrait video.
-        // Its overall height is matched to the others via --project-card-min-h instead.
-        if (frame.classList.contains('is-landscape')) return;
-        maxChrome = Math.max(maxChrome, c.offsetHeight - frame.offsetHeight);
+        const header = c.querySelector('.project-card-header');
+        if (!header) return;
+        const ccs = getComputedStyle(c);
+        const hcs = getComputedStyle(header);
+        maxChrome = Math.max(maxChrome,
+          parseFloat(ccs.paddingTop) + parseFloat(ccs.paddingBottom) +
+          parseFloat(ccs.borderTopWidth) + parseFloat(ccs.borderBottomWidth) +
+          header.offsetHeight + parseFloat(hcs.marginBottom));
       });
       if (maxChrome > 0) section.style.setProperty('--project-card-chrome', Math.ceil(maxChrome) + 'px');
       // Reading offsetHeight forces a synchronous reflow with the new cap (videos resized),

@@ -306,7 +306,9 @@ body {
   --project-deepest-top: calc(var(--project-stack-top) + 7 * var(--project-stack-gap));
   /* Non-video card chrome (header + paddings + stacked description on mobile). */
   --project-card-chrome: 224px;
-  --project-frame-cap: calc(var(--project-stack-vph) - var(--project-deepest-top) - var(--project-card-chrome) - var(--project-stack-bottom-gap));
+  /* max() floor: if the chrome is ever over-measured the raw calc can go negative, which
+     collapses every video to zero height. Never let the frame shrink below a usable size. */
+  --project-frame-cap: max(140px, calc(var(--project-stack-vph) - var(--project-deepest-top) - var(--project-card-chrome) - var(--project-stack-bottom-gap)));
 }
 
 .project-scroll-track {
