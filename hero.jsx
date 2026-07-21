@@ -11,7 +11,11 @@ function HeroSection() {
 
   const navLinks = ['About', 'Services', 'Projects', 'Contact'];
   const [activeSection, setActiveSection] = useState('');
-  const heroTitleCopies = Array.from({ length: 4 }, (_, i) => i);
+  // One copy per group (two groups total). A seamless -50% marquee only needs two
+  // identical halves; more copies just make the animated strip enormous (34k+ px),
+  // which overflows the GPU's max texture size and causes ghosting/tile-tearing on
+  // real hardware. One huge copy already spans wider than any viewport.
+  const heroTitleCopies = Array.from({ length: 1 }, (_, i) => i);
 
   const getBoundedPortraitPosition = useCallback((cx, cy) => {
     const section = sectionRef.current;

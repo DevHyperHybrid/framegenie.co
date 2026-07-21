@@ -74,7 +74,7 @@ body {
   }
 
   .hero-title-track {
-    animation-duration: 20s !important;
+    animation-duration: 5s !important;
   }
 
   .hero-portrait-img {
@@ -128,7 +128,7 @@ body {
   .hero-title-track {
     display: flex;
     width: max-content;
-    animation: hero-title-marquee 14s linear infinite;
+    animation: hero-title-marquee 3.5s linear infinite;
     backface-visibility: hidden;
     will-change: transform;
   }
@@ -377,7 +377,7 @@ body {
   .hero-title-track {
     display: flex;
     width: max-content;
-    animation: hero-title-marquee 22s linear infinite;
+    animation: hero-title-marquee 5.5s linear infinite;
     backface-visibility: hidden;
     will-change: transform;
   }
@@ -509,7 +509,7 @@ body {
   .hero-title-track {
     display: flex;
     width: max-content;
-    animation: hero-title-marquee 14s linear infinite;
+    animation: hero-title-marquee 3.5s linear infinite;
     backface-visibility: hidden;
     will-change: transform;
   }
