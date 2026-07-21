@@ -43,6 +43,21 @@ body {
   background-clip: text;
 }
 
+/* The hero title is an animated (transformed) marquee. On real GPUs, a
+   -webkit-background-clip:text gradient on a transformed element renders a
+   doubled/ghosted copy of the text (a documented Chrome compositing bug; it never
+   shows under software rendering, which is why the preview looked clean). Give the
+   MOVING title a solid fill with no text-clip so it composites cleanly. The static
+   section headings keep the gradient — they're not animated, so they're unaffected. */
+.hero-title,
+.hero-title-copy {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: #A8B3BD;
+  color: #A8B3BD;
+}
+
 .hero-title-track {
   display: inline-block;
 }
