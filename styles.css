@@ -129,8 +129,6 @@ body {
     display: flex;
     width: max-content;
     animation: hero-title-marquee 3.5s linear infinite;
-    backface-visibility: hidden;
-    will-change: transform;
   }
   .hero-title-group {
     display: flex !important;
@@ -378,8 +376,6 @@ body {
     display: flex;
     width: max-content;
     animation: hero-title-marquee 5.5s linear infinite;
-    backface-visibility: hidden;
-    will-change: transform;
   }
   .hero-title-group {
     display: flex !important;
@@ -510,8 +506,6 @@ body {
     display: flex;
     width: max-content;
     animation: hero-title-marquee 3.5s linear infinite;
-    backface-visibility: hidden;
-    will-change: transform;
   }
 
   .hero-title-group {
